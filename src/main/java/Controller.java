@@ -6,6 +6,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,7 +16,7 @@ import java.util.ResourceBundle;
 public class Controller implements Initializable {
 
     @FXML
-    private TreeView<File> browser;
+    private TreeView<DirectoryItem> browser;
 
     @FXML
     private Button button;
@@ -36,44 +37,52 @@ public class Controller implements Initializable {
 
         //        String homeDir = System.getProperty("user.home");
         String homeDir = "C:\\Users\\Vitt0ri0\\Downloads";
-        File home = new File(homeDir);
+        DirectoryItem home = new DirectoryItem(homeDir);
 
-
-        TreeItem<File> root = new TreeItem<>(home);
+        TreeItem<DirectoryItem> root = new TreeItem<DirectoryItem>(home);
         root.setExpanded(true);
         root = loadDirs(root);
 
         browser.setRoot(root);
-
-        ObservableList<FileItem> data = FXCollections.observableArrayList();
-        data.add(new FileItem("file1", ".jar"));
-        data.add(new FileItem("file2", ".txt"));
-
-        data = getDirectoryItems(home);
 
         // определяем фабрику для столбца с привязкой к свойству name
         columnName.setCellValueFactory(new PropertyValueFactory<FileItem, String>("name"));
 
         columnType.setCellValueFactory(new PropertyValueFactory<FileItem, String>("type"));
 
-        tableView.setItems(data);
+        showDirectoryItems(home);
+
+
 //        tableView.getColumns().addAll(new TableColumn("Hello"), new TableColumn("World"));
 
     }
 
-    public TreeItem<File> loadDirs(TreeItem<File> root) {
+    public TreeItem<DirectoryItem> loadDirs(TreeItem<DirectoryItem> root) {
         File file = root.getValue();
-        File[] files = file.listFiles();
+        File[] files = file.listFiles(File::isDirectory);
         if (files != null)
             for (File f : files) {
-                TreeItem<File> node = loadDirs(new TreeItem<File>(f));
+                DirectoryItem df = new DirectoryItem(f.getPath());
+                TreeItem<DirectoryItem> node = loadDirs(new TreeItem<DirectoryItem>(df));
                 root.getChildren().add(node);
             }
         return root;
     }
 
-    public void showDirectoryItems() {
+//    public TreeItem<DirectoryItem> loadDirsStr(TreeItem<DirectoryItem> root) {
+//        File file = root.getValue().getFile();
+//        File[] files = file.listFiles(File::isDirectory);
+//        if (files != null)
+//            for (File f : files) {
+//                TreeItem<DirectoryItem> node = loadDirsStr(new TreeItem<DirectoryItem>(new DirectoryItem(f)));
+//                root.getChildren().add(node);
+//            }
+//        return root;
+//    }
 
+    public void showDirectoryItems(File directory) {
+        ObservableList<FileItem> data = getDirectoryItems(directory);
+        tableView.setItems(data);
     }
 
     public ObservableList<FileItem> getDirectoryItems(File directory) {
